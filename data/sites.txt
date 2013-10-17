@@ -1,1 +1,7 @@
 www.google.com
+www.yahoo.com
+www.gutenberg.org
+www.espnfc.com
+news.ycombinator.com
+www.techcrunch.com
+www.apple.com
