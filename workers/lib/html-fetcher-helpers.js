@@ -3,6 +3,12 @@ var path = require('path');
 var http = require('http');
 var mysql = require('mysql');
 
+var connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  database: 'web_historian'
+});
+
 
 exports.readUrls = readUrls = function(filePath, cb){
   var sites;
@@ -22,11 +28,11 @@ exports.downloadUrls = function(urls){
   dbConnect(loopThruUrls, urls);
 };
 
-exports.dbWrite = dbWrite = function(url, data, connection) {
+exports.dbWrite = dbWrite = function(url, data) {
   console.log('writing', url, 'to database');
-  connection.query("insert into archive (url, html, stamp) values ('" + url + "', '" + data + "', NOW())", function(error, rows) {
+  connection.query("insert into archive (url, html, stamp) values (?, ?, NOW())", [url, data], function(error, rows) {
     if (error) {
-      console.log('error inserting');
+      console.log('error inserting', error);
     } else {
       console.log('inserted successfully');
       // connection.end(function(error) {
@@ -69,11 +75,7 @@ exports.initiateRequest = initiateRequest = function(url) {
 };
 
 exports.dbConnect = dbConnect = function(cb, urls) {
-  var connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    database: 'web_historian'
-  });
+
   connection.connect(function(error) {
     if (error) {
       console.log('error connecting to DB');
