@@ -1,6 +1,14 @@
 var path = require('path');
 var url = require('url');
 var fs = require('fs');
+var mysql = require('mysql');
+var fetcherhelpers = require('../workers/lib/html-fetcher-helpers');
+
+var connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  database: 'web_historian'
+});
 
 module.exports.datadir = path.resolve(__dirname, "../data/sites.txt"); // tests will need to override this.
 
@@ -50,26 +58,29 @@ exports.findSite = findSite = function(req, res) {
 };
 
 exports.checkSitesList = checkSitesList = function(req, res, site) {
-  var pathName = module.exports.datadir;
-  fs.readFile(pathName, 'utf8', function(error, content){
-    if (error){
-      sendResponse(res, '', 500);
-    } else {
-      console.log('reading the file successfully');
-      console.log('content of the file', content);
-      if (content.indexOf(site) === -1){
-        fs.appendFile(pathName, site + '\n', function(error) {
-          if (error) {
-            sendResponse(res, '', 500);
-          } else {
-            sendResponse(res, '', 302);
-          }
-        });
-      } else {
-        sendResponse(res, '', 302); // should probably use code 201 rather than 302
-      }
+  fetcherhelpers.readQuery(checkArchivingAlready, req, res, site);
+};
+
+exports.checkArchivingAlready = checkArchivingAlready = function(urls, req, res, site) {
+  var found = false;
+  for (var j = 0; j < urls.length; j++) {
+    if (site === urls[j]) {
+      found = true;
     }
-  });
+  }
+  if (!found) {
+    connection.query('insert into list (url) values (?)', [site], function(error, rows) {
+      if (error) {
+        console.log('error adding', site, 'to list:', error);
+        sendResponse(res, '', 500);
+      } else {
+        console.log('added', site, 'to list');
+        sendResponse(res, '', 201);
+      }
+    });
+  } else {
+    sendResponse(res, '', 302);
+  }
 };
 
 exports.collectInput = collectInput = function(request, response, cb){
@@ -81,7 +92,7 @@ exports.collectInput = collectInput = function(request, response, cb){
     var site = data.split('=')[1];
     cb(request, response, site);
   });
-}
+};
 
 
 module.exports.handleRequest = function (req, res) {

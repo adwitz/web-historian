@@ -29,7 +29,7 @@ exports.dbConnect = dbConnect = function(cb) {
   });
 };
 
-exports.readQuery = readQuery = function(cb) {
+exports.readQuery = readQuery = function(cb, req, res, site) {
   connection.query('select url from list', function(error, rows) {
     if (error) {
       console.log('error reading urls from database:', error);
@@ -38,14 +38,14 @@ exports.readQuery = readQuery = function(cb) {
       for (var i = 0; i < rows.length; i++) {
         urls.push(rows[i].url);
       }
-      cb(urls);
+      cb(urls, req, res, site);
     }
   });
 };
 
 exports.downloadUrls = function(urls){
-  for (var i = 0; i < urls.length; i++) {
-    initiateRequest(urls[i]);
+  for (var k = 0; k < urls.length; k++) {
+    initiateRequest(urls[k]);
   }
 };
 
