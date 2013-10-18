@@ -9,23 +9,60 @@ var connection = mysql.createConnection({
   database: 'web_historian'
 });
 
+exports.readUrls = readUrls = function(cb){
+  if (!connection) {
+    dbConnect(function() {
+      readQuery(cb);
+    });
+  } else {
+    readQuery(cb);
+  }
+};
 
-exports.readUrls = readUrls = function(filePath, cb){
-  var sites;
-  fs.readFile(filePath, "utf8", function(error, content){
-    if (error){
-      return;
+exports.dbConnect = dbConnect = function(cb) {
+  connection.connect(function(error) {
+    if (error) {
+      console.log('error connecting to DB');
     } else {
-      sites = content.split('\n');
-      sites.splice(sites.length - 1, 1);
-      console.log(sites);
-      cb(sites);
+      cb();
+    }
+  });
+};
+
+exports.readQuery = readQuery = function(cb) {
+  connection.query('select url from list', function(error, rows) {
+    if (error) {
+      console.log('error reading urls from database:', error);
+    } else {
+      var urls = [];
+      for (var i = 0; i < rows.length; i++) {
+        urls.push(rows[i].url);
+      }
+      cb(urls);
     }
   });
 };
 
 exports.downloadUrls = function(urls){
-  dbConnect(loopThruUrls, urls);
+  for (var i = 0; i < urls.length; i++) {
+    initiateRequest(urls[i]);
+  }
+};
+
+exports.initiateRequest = initiateRequest = function(url) {
+  var options = {
+    host: url,
+    path: '/'
+  };
+  http.get(options, function(res) {
+    var data = '';
+    res.on('data', function(chunk){
+      data += chunk;
+    });
+    res.on('end', function(){
+      dbWrite(url, data);
+    });
+  });
 };
 
 exports.dbWrite = dbWrite = function(url, data) {
@@ -46,48 +83,9 @@ exports.dbWrite = dbWrite = function(url, data) {
   });
 };
 
-exports.fileWrite = fileWrite = function(url, data) {
-  var filePath = path.resolve(__dirname, '../../data/sites/' + url);
-  fs.writeFile(filePath, data, function(error) {
-    if (error) {
-      console.log('failed to write successfully');
-    } else {
-      console.log('wrote successfully');
-    }
-  });
-};
 
-exports.initiateRequest = initiateRequest = function(url) {
-  var options = {
-    host: url,
-    path: '/'
-  };
-  http.get(options, function(res) {
-    var data = '';
-    res.on('data', function(chunk){
-      data += chunk;
-    });
-    res.on('end', function(){
-      //fileWrite(urls[i], data);
-      dbWrite(url, data);
-    });
-  });
-};
 
-exports.dbConnect = dbConnect = function(cb, urls) {
 
-  connection.connect(function(error) {
-    if (error) {
-      console.log('error connecting to DB');
-    } else {
-      cb(urls);
-    }
-  });
-};
 
-exports.loopThruUrls = loopThruUrls = function(urls) {
-  for (var i = 0; i < urls.length; i++) {
-    initiateRequest(urls[i]);
-  }
-};
+
 

@@ -5,3 +5,5 @@ www.espnfc.com
 news.ycombinator.com
 www.techcrunch.com
 www.apple.com
+www.twitter.com
+www.nytimes.com

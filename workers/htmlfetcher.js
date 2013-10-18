@@ -5,9 +5,6 @@ var path = require('path');
 var fetcherhelpers = require('./lib/html-fetcher-helpers');
 
 var crawl = function() {
-  fetcherhelpers.readUrls(path.resolve(__dirname, '../data/sites.txt'), function(urls) {
-      console.log('urlsArray', urls);
-      fetcherhelpers.downloadUrls(urls);
-    });
+  fetcherhelpers.readUrls(fetcherhelpers.downloadUrls);
 };
 crawl();

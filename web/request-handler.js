@@ -49,8 +49,7 @@ exports.findSite = findSite = function(req, res) {
   });
 };
 
-exports.addToSiteList = addToSiteList = function(req, res) {
-  var site = req._postData.url;
+exports.checkSitesList = checkSitesList = function(req, res, site) {
   var pathName = module.exports.datadir;
   fs.readFile(pathName, 'utf8', function(error, content){
     if (error){
@@ -73,6 +72,17 @@ exports.addToSiteList = addToSiteList = function(req, res) {
   });
 };
 
+exports.collectInput = collectInput = function(request, response, cb){
+  var data = '';
+  request.on('data', function(chunk){
+    data += chunk;
+  });
+  request.on('end', function(){
+    var site = data.split('=')[1];
+    cb(request, response, site);
+  });
+}
+
 
 module.exports.handleRequest = function (req, res) {
   console.log(exports.datadir);
@@ -83,7 +93,7 @@ module.exports.handleRequest = function (req, res) {
       break;
 
     case 'POST':
-      addToSiteList(req, res);
+      collectInput(req, res, checkSitesList);
       break;
 
     case 'OPTIONS':
