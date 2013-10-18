@@ -40,6 +40,9 @@ exports.findSite = findSite = function(req, res) {
   }
   fs.exists(pathName, function(exists) {
     if (exists) {
+      //grab html file and send content as response
+      
+
       fs.readFile(pathName, function(error, content) {
         if (error) {
           sendResponse(res, '', 404);
@@ -58,6 +61,7 @@ exports.findSite = findSite = function(req, res) {
 };
 
 exports.checkSitesList = checkSitesList = function(req, res, site) {
+  //TODO create different call back for get requests
   fetcherhelpers.readQuery(checkArchivingAlready, req, res, site);
 };
 
@@ -100,7 +104,7 @@ module.exports.handleRequest = function (req, res) {
 
   switch( req.method ){
     case 'GET':
-      findSite(req, res);
+      //findSite(req, res);
       break;
 
     case 'POST':
